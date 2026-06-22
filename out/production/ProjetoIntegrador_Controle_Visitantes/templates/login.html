@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Controle de Visitantes</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0F172A;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .titulo { color: #F1F5F9; font-size: 22px; font-weight: 700; }
+        .subtitulo { color: #94A3B8; font-size: 13px; margin-top: 4px; }
+        .cabecalho { text-align: center; }
+
+        .card {
+            background: #1E293B;
+            border-radius: 12px;
+            padding: 32px;
+            width: 100%;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+
+        label { display: block; color: #94A3B8; font-size: 12px; margin-bottom: 6px; }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px 14px;
+            background: #0F172A;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #F1F5F9;
+            font-size: 14px;
+            margin-bottom: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus { border-color: #3B82F6; }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 12px;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button[type="submit"]:hover { background: #2563EB; }
+
+        .alerta {
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 14px;
+        }
+        .alerta-erro    { background: #450a0a; color: #F87171; border: 1px solid #F87171; }
+        .alerta-sucesso { background: #052e16; color: #4ADE80; border: 1px solid #4ADE80; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="cabecalho">
+        <p class="titulo">Controle de Visitantes</p>
+        <p class="subtitulo">Faça login para continuar</p>
+    </div>
+
+    <div class="card">
+        <!-- Mensagens -->
+        <div th:if="${mensagemErro}" class="alerta alerta-erro" th:text="${mensagemErro}"></div>
+        <div th:if="${mensagemSucesso}" class="alerta alerta-sucesso" th:text="${mensagemSucesso}"></div>
+
+        <!-- Formulário — action processado pelo Spring Security -->
+        <form th:action="@{/login}" method="post">
+            <label for="username">Usuário</label>
+            <input type="text" id="username" name="username" placeholder="Digite seu usuário" required autofocus>
+
+            <label for="password">Senha</label>
+            <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
+
+            <button type="submit">Entrar</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

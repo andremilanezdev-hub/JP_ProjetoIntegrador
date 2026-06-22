@@ -1,0 +1,21 @@
+<component name="libraryTable">
+  <library name="mysql-connector-odbc-9.7.0-linux-glibc2">
+    <ANNOTATIONS>
+      <root url="file://$USER_HOME$/Downloads/mysql-connector-odbc-9.7.0-linux-glibc2.28-x86-64bit" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$USER_HOME$/Downloads/mysql-connector-odbc-9.7.0-linux-glibc2.28-x86-64bit" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="file://$USER_HOME$/Downloads/mysql-connector-odbc-9.7.0-linux-glibc2.28-x86-64bit" />
+    </JAVADOC>
+    <NATIVE>
+      <root url="file://$USER_HOME$/Downloads/mysql-connector-odbc-9.7.0-linux-glibc2.28-x86-64bit" />
+    </NATIVE>
+    <SOURCES>
+      <root url="file://$USER_HOME$/Downloads/mysql-connector-odbc-9.7.0-linux-glibc2.28-x86-64bit" />
+    </SOURCES>
+    <jarDirectory url="file://$USER_HOME$/Downloads/mysql-connector-odbc-9.7.0-linux-glibc2.28-x86-64bit" recursive="false" />
+    <jarDirectory url="file://$USER_HOME$/Downloads/mysql-connector-odbc-9.7.0-linux-glibc2.28-x86-64bit" recursive="false" type="SOURCES" />
+  </library>
+</component>
