@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamentos — Controle de Visitantes</title>
+    <style>
+        :root {
+            --bg:#0F172A; --surface:#1E293B; --surface2:#273549; --border:#334155;
+            --text:#F1F5F9; --text-muted:#94A3B8; --accent:#3B82F6; --accent-hov:#2563EB;
+            --danger:#F87171; --success:#4ADE80; --warning:#FBBF24; --purple:#A78BFA;
+            --input-bg:#0F172A; --shadow:rgba(0,0,0,.35); --row-hover:rgba(59,130,246,.06);
+        }
+        [data-theme="light"] {
+            --bg:#F1F5F9; --surface:#FFF; --surface2:#E2E8F0; --border:#CBD5E1;
+            --text:#0F172A; --text-muted:#64748B; --input-bg:#F8FAFC;
+            --shadow:rgba(0,0,0,.08); --row-hover:rgba(59,130,246,.05);
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .25s,color .25s}
+
+        nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 12px var(--shadow);position:sticky;top:0;z-index:100}
+        .nav-brand{display:flex;align-items:center;gap:10px}
+        .nav-logo{width:36px;height:36px;background:linear-gradient(135deg,#3B82F6,#6366F1);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px}
+        .nav-brand span{font-size:15px;font-weight:700}
+        .nav-right{display:flex;align-items:center;gap:10px}
+        .btn-nav{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);padding:7px 14px;border-radius:9px;font-size:13px;font-weight:600;text-decoration:none;transition:all .2s}
+        .btn-nav:hover{border-color:var(--accent);color:var(--accent)}
+        .btn-icon{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);padding:7px 11px;border-radius:9px;cursor:pointer;font-size:16px;transition:all .2s;line-height:1}
+        .btn-icon:hover{border-color:var(--accent);color:var(--accent)}
+
+        main{max-width:1100px;margin:0 auto;padding:40px 24px 60px}
+        .page-header{margin-bottom:28px}
+        .page-header h1{font-size:22px;font-weight:700}
+        .page-header p{color:var(--text-muted);font-size:13px;margin-top:3px}
+
+        .alerta{display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:20px;animation:fadeUp .3s ease}
+        .alerta-erro{background:rgba(248,113,113,.1);color:var(--danger);border:1px solid rgba(248,113,113,.25)}
+        .alerta-sucesso{background:rgba(74,222,128,.1);color:var(--success);border:1px solid rgba(74,222,128,.25)}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+        .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;margin-bottom:24px;box-shadow:0 2px 12px var(--shadow)}
+        .card-title{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:20px}
+
+        .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .form-full{grid-column:span 2}
+        .form-group label{display:block;font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+        select,input[type="text"],input[type="datetime-local"],textarea{width:100%;padding:10px 13px;background:var(--input-bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s;font-family:inherit}
+        select:focus,input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+        textarea{resize:vertical;min-height:70px}
+
+        /* Campo visitantes */
+        .visitantes-field{display:flex;gap:8px;align-items:stretch}
+        .visitantes-display{flex:1;padding:10px 13px;background:var(--input-bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;min-height:42px;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+        .visitantes-display.vazio{color:var(--text-muted);font-style:italic}
+        .tag{background:var(--accent);color:#fff;padding:3px 10px;border-radius:50px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px}
+        .tag button{background:none;border:none;color:#fff;cursor:pointer;font-size:14px;padding:0;line-height:1}
+        .btn-abrir-modal{padding:10px 16px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s}
+        .btn-abrir-modal:hover{border-color:var(--accent);color:var(--accent)}
+
+        .btn-primary{padding:12px 24px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:background .2s,transform .15s,box-shadow .2s;margin-top:4px}
+        .btn-primary:hover{background:var(--accent-hov);box-shadow:0 4px 14px rgba(59,130,246,.35);transform:translateY(-1px)}
+
+        /* ── Próximos agendamentos ── */
+        .proximos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+        .prox-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:18px;border-left:4px solid var(--purple)}
+        .prox-card .prox-data{font-size:12px;color:var(--purple);font-weight:700;margin-bottom:6px}
+        .prox-card .prox-nome{font-weight:700;font-size:14px;margin-bottom:4px}
+        .prox-card .prox-det{font-size:12px;color:var(--text-muted);margin-bottom:2px}
+        .prox-card .prox-motivo{font-size:12px;color:var(--text-muted);font-style:italic;margin-bottom:14px}
+        .prox-acoes{display:flex;gap:8px}
+        .btn-confirmar-chegada{flex:1;padding:8px;background:var(--success);color:#0F172A;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;transition:opacity .2s}
+        .btn-confirmar-chegada:hover{opacity:.85}
+        .btn-cancelar-ag{padding:8px 12px;background:transparent;color:var(--danger);border:1px solid var(--danger);border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
+        .btn-cancelar-ag:hover{background:var(--danger);color:#fff}
+
+        /* ── Tabela ── */
+        .table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+        table{width:100%;border-collapse:collapse}
+        thead{background:var(--surface2)}
+        th{padding:12px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);white-space:nowrap}
+        td{padding:12px 14px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+        tr:last-child td{border-bottom:none}
+        tbody tr{transition:background .15s}
+        tbody tr:hover td{background:var(--row-hover)}
+
+        .badge-id{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);padding:2px 8px;border-radius:50px;font-size:11px;font-weight:600}
+        .badge{padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700}
+        .badge-agendado  {background:rgba(167,139,250,.15);color:var(--purple);border:1px solid rgba(167,139,250,.3)}
+        .badge-confirmado{background:rgba(74,222,128,.1);color:var(--success);border:1px solid rgba(74,222,128,.25)}
+        .badge-cancelado {background:rgba(248,113,113,.1);color:var(--danger);border:1px solid rgba(248,113,113,.25)}
+
+        .btn-sm{padding:6px 11px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;border:none;transition:all .2s}
+        .btn-excluir{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+        .btn-excluir:hover{background:var(--danger);color:#fff}
+
+        .vazio{text-align:center;color:var(--text-muted);padding:40px;font-size:14px}
+
+        /* ── Modal ── */
+        .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+        .modal-overlay.open{opacity:1;pointer-events:all}
+        .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:520px;max-height:80vh;display:flex;flex-direction:column;gap:16px;box-shadow:0 24px 60px rgba(0,0,0,.5);transform:translateY(16px);transition:transform .2s}
+        .modal-overlay.open .modal{transform:translateY(0)}
+        .modal-header{display:flex;justify-content:space-between;align-items:center}
+        .modal-header h2{font-size:16px;font-weight:700}
+        .modal-close{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+        .modal-close:hover{border-color:var(--danger);color:var(--danger)}
+        .modal-search input{width:100%;padding:10px 13px;background:var(--input-bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;transition:border-color .2s}
+        .modal-search input:focus{border-color:var(--accent)}
+        .modal-lista{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px}
+        .modal-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:9px;border:1.5px solid var(--border);cursor:pointer;transition:all .2s;background:var(--input-bg)}
+        .modal-item:hover{border-color:var(--accent);background:var(--surface2)}
+        .modal-item.selecionado{border-color:var(--accent);background:rgba(59,130,246,.1)}
+        .modal-item .check{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:12px}
+        .modal-item.selecionado .check{background:var(--accent);border-color:var(--accent);color:#fff}
+        .modal-item .info .nome{font-size:14px;font-weight:600}
+        .modal-item .info .empresa{font-size:12px;color:var(--text-muted)}
+        .modal-footer{display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--border);padding-top:16px}
+        .btn-cancelar{padding:9px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+        .btn-cancelar:hover{border-color:var(--danger);color:var(--danger)}
+        .btn-confirmar{padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:background .2s}
+        .btn-confirmar:hover{background:var(--accent-hov)}
+    </style>
+</head>
+<body>
+
+<!-- Modal visitantes -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>🧑‍🤝‍🧑 Selecionar Visitantes</h2>
+            <button class="modal-close" onclick="fecharModal()">✕</button>
+        </div>
+        <div class="modal-search">
+            <input type="text" id="modalBusca" placeholder="Buscar por nome ou empresa..." oninput="filtrarModal(this.value)">
+        </div>
+        <div class="modal-lista" id="modalLista"></div>
+        <div class="modal-footer">
+            <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+            <button class="btn-confirmar" onclick="confirmarSelecao()">Confirmar seleção</button>
+        </div>
+    </div>
+</div>
+
+<nav>
+    <div class="nav-brand">
+        <div class="nav-logo">🏢</div>
+        <span>Controle de Visitantes</span>
+    </div>
+    <div class="nav-right">
+        <a th:href="@{/menu}" class="btn-nav">← Menu</a>
+        <button class="btn-icon" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+    </div>
+</nav>
+
+<main>
+    <div class="page-header">
+        <h1>📅 Agendamentos</h1>
+        <p>Agende visitas antecipadamente e confirme a chegada no dia</p>
+    </div>
+
+    <div th:if="${sucesso}" class="alerta alerta-sucesso">✅ <span th:text="${sucesso}"></span></div>
+    <div th:if="${erro}"    class="alerta alerta-erro">⚠️ <span th:text="${erro}"></span></div>
+
+    <!-- Novo agendamento -->
+    <div class="card">
+        <div class="card-title">➕ Novo Agendamento</div>
+        <form th:action="@{/agendamentos/criar}" method="post" id="formAgendar">
+            <div id="hiddenInputs"></div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Data e Hora</label>
+                    <input type="datetime-local" name="dataAgendamento" required>
+                </div>
+                <div class="form-group">
+                    <label>Departamento</label>
+                    <select name="departamentoId" required>
+                        <option value="" disabled selected>Selecione...</option>
+                        <option th:each="d : ${departamentos}" th:value="${d.id}" th:text="${d.nome}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Visitantes</label>
+                    <div class="visitantes-field">
+                        <div class="visitantes-display vazio" id="visitantesDisplay">Nenhum visitante selecionado</div>
+                        <button type="button" class="btn-abrir-modal" onclick="abrirModal()">+ Selecionar</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Motivo</label>
+                    <input type="text" name="motivo" placeholder="Ex: Reunião comercial" required>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary" onclick="return validarVisitantes()">📅 Agendar Visita</button>
+        </form>
+    </div>
+
+    <!-- Próximos 7 dias -->
+    <div class="card" th:if="${not #lists.isEmpty(proximos)}">
+        <div class="card-title">⏰ Agendamentos Próximos (7 dias)</div>
+        <div class="proximos-grid">
+            <div th:each="a : ${proximos}" class="prox-card">
+                <div class="prox-data" th:text="${#temporals.format(a.data_agendamento, 'dd/MM/yyyy HH:mm')}"></div>
+                <div class="prox-nome" th:text="${a.visitantes} ?: 'Visitante não vinculado'"></div>
+                <div class="prox-det">🏢 <span th:text="${a.departamento}"></span></div>
+                <div class="prox-motivo" th:text="${a.motivo}"></div>
+                <div class="prox-acoes">
+                    <form th:action="@{/agendamentos/confirmar/{id}(id=${a.id})}" method="post" style="flex:1">
+                        <button type="submit" class="btn-confirmar-chegada">✅ Confirmar Chegada</button>
+                    </form>
+                    <form th:action="@{/agendamentos/cancelar/{id}(id=${a.id})}" method="post"
+                          onsubmit="return confirm('Cancelar este agendamento?')">
+                        <button type="submit" class="btn-cancelar-ag">✕</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico -->
+    <div class="card">
+        <div class="card-title">📜 Histórico de Agendamentos</div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th><th>Data</th><th>Visitante(s)</th>
+                        <th>Departamento</th><th>Motivo</th><th>Status</th><th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="a : ${agendamentos}">
+                        <td><span class="badge-id" th:text="${a.id}"></span></td>
+                        <td th:text="${#temporals.format(a.data_agendamento, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td th:text="${a.visitantes} ?: '—'"></td>
+                        <td th:text="${a.departamento}"></td>
+                        <td th:text="${a.motivo}"></td>
+                        <td>
+                            <span th:if="${a.status == 'AGENDADO'}"   class="badge badge-agendado">Agendado</span>
+                            <span th:if="${a.status == 'CONFIRMADO'}" class="badge badge-confirmado">Confirmado</span>
+                            <span th:if="${a.status == 'CANCELADO'}"  class="badge badge-cancelado">Cancelado</span>
+                        </td>
+                        <td>
+                            <form th:action="@{/agendamentos/deletar/{id}(id=${a.id})}" method="post"
+                                  onsubmit="return confirm('Excluir este agendamento?')">
+                                <button type="submit" class="btn-sm btn-excluir">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(agendamentos)}">
+                        <td colspan="7" class="vazio">Nenhum agendamento registrado.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script th:inline="javascript">
+    const todosVisitantes = /*[[${visitantes}]]*/ [];
+</script>
+<script>
+    const saved = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.querySelector('.btn-icon').textContent = saved === 'dark' ? '🌙' : '☀️';
+    function toggleTheme() {
+        const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('theme', t);
+        document.querySelector('.btn-icon').textContent = t === 'dark' ? '🌙' : '☀️';
+    }
+
+    let selecionados = {}, tempSelecionados = {};
+
+    function abrirModal() {
+        tempSelecionados = { ...selecionados };
+        renderizarLista(todosVisitantes);
+        document.getElementById('modalBusca').value = '';
+        document.getElementById('modalOverlay').classList.add('open');
+        document.getElementById('modalBusca').focus();
+    }
+    function fecharModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+    document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) fecharModal(); });
+
+    function renderizarLista(lista) {
+        const container = document.getElementById('modalLista');
+        container.innerHTML = '';
+        if (!lista.length) { container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:24px">Nenhum visitante encontrado</p>'; return; }
+        lista.forEach(v => {
+            const sel = !!tempSelecionados[v.id];
+            const item = document.createElement('div');
+            item.className = 'modal-item' + (sel ? ' selecionado' : '');
+            item.innerHTML = `<div class="check">${sel ? '✓' : ''}</div><div class="info"><div class="nome">${v.nome}</div><div class="empresa">${v.empresa || ''}</div></div>`;
+            item.addEventListener('click', () => {
+                if (tempSelecionados[v.id]) { delete tempSelecionados[v.id]; item.classList.remove('selecionado'); item.querySelector('.check').textContent = ''; }
+                else { tempSelecionados[v.id] = v; item.classList.add('selecionado'); item.querySelector('.check').textContent = '✓'; }
+            });
+            container.appendChild(item);
+        });
+    }
+    function filtrarModal(t) { renderizarLista(todosVisitantes.filter(v => v.nome.toLowerCase().includes(t.toLowerCase()) || (v.empresa||'').toLowerCase().includes(t.toLowerCase()))); }
+
+    function confirmarSelecao() {
+        selecionados = { ...tempSelecionados };
+        atualizarDisplay(); atualizarHiddenInputs(); fecharModal();
+    }
+    function atualizarDisplay() {
+        const d = document.getElementById('visitantesDisplay');
+        const ids = Object.keys(selecionados);
+        if (!ids.length) { d.innerHTML = 'Nenhum visitante selecionado'; d.classList.add('vazio'); return; }
+        d.classList.remove('vazio');
+        d.innerHTML = ids.map(id => `<span class="tag">${selecionados[id].nome} <button type="button" onclick="removerTag(${id})">×</button></span>`).join('');
+    }
+    function removerTag(id) { delete selecionados[id]; atualizarDisplay(); atualizarHiddenInputs(); }
+    function atualizarHiddenInputs() {
+        document.getElementById('hiddenInputs').innerHTML = Object.keys(selecionados).map(id => `<input type="hidden" name="visitantesIds" value="${id}">`).join('');
+    }
+    function validarVisitantes() {
+        if (!Object.keys(selecionados).length) { alert('Selecione pelo menos um visitante.'); return false; }
+        return true;
+    }
+</script>
+</body>
+</html>
