@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu — Controle de Visitantes</title>
+    <style>
+        :root {
+            --bg:         #0F172A;
+            --surface:    #1E293B;
+            --surface2:   #273549;
+            --border:     #334155;
+            --text:       #F1F5F9;
+            --text-muted: #94A3B8;
+            --accent:     #3B82F6;
+            --accent-hov: #2563EB;
+            --danger:     #F87171;
+            --shadow:     rgba(0,0,0,0.35);
+        }
+        [data-theme="light"] {
+            --bg:         #F1F5F9;
+            --surface:    #FFFFFF;
+            --surface2:   #E2E8F0;
+            --border:     #CBD5E1;
+            --text:       #0F172A;
+            --text-muted: #64748B;
+            --shadow:     rgba(0,0,0,0.08);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; display: flex; flex-direction: column;
+            transition: background .25s, color .25s;
+        }
+
+        /* ── Navbar ── */
+        nav {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 32px;
+            height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 1px 12px var(--shadow);
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .nav-brand {
+            display: flex; align-items: center; gap: 10px;
+        }
+        .nav-brand .logo {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, #3B82F6, #6366F1);
+            border-radius: 9px; display: flex; align-items: center;
+            justify-content: center; font-size: 18px;
+        }
+        .nav-brand span { font-size: 15px; font-weight: 700; color: var(--text); }
+
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+
+        .badge-usuario {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text-muted); padding: 5px 12px;
+            border-radius: 50px; font-size: 13px;
+        }
+        .badge-usuario strong { color: var(--text); }
+
+        .btn-icon {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text-muted); padding: 7px 11px;
+            border-radius: 9px; cursor: pointer; font-size: 16px;
+            transition: all .2s; line-height: 1;
+        }
+        .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ── Conteúdo ── */
+        main {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; padding: 56px 24px;
+            gap: 40px;
+        }
+
+        .saudacao { text-align: center; }
+        .saudacao h1 { font-size: 28px; font-weight: 700; color: var(--text); }
+        .saudacao p  { color: var(--text-muted); font-size: 14px; margin-top: 6px; }
+
+        /* ── Grid de módulos ── */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            width: 100%; max-width: 560px;
+        }
+
+        .modulo {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 32px 20px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text);
+            font-size: 15px; font-weight: 600;
+            cursor: pointer;
+            transition: all .22s;
+            display: flex; flex-direction: column;
+            align-items: center; gap: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+        .modulo:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(59,130,246,.35);
+        }
+        .modulo:hover .icone-bg { background: rgba(255,255,255,.2); }
+
+        .icone-bg {
+            width: 52px; height: 52px;
+            background: var(--surface2);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px;
+            transition: background .22s;
+        }
+
+        .modulo-label { font-size: 14px; font-weight: 600; }
+        .modulo-desc  { font-size: 12px; opacity: .65; font-weight: 400; }
+
+        .modulo-disabled {
+            opacity: .45; cursor: not-allowed; pointer-events: none;
+        }
+
+        /* ── Sair ── */
+        .sair-wrap { width: 100%; max-width: 560px; }
+        .btn-sair {
+            width: 100%; padding: 14px;
+            background: transparent;
+            border: 1.5px solid var(--danger);
+            color: var(--danger);
+            border-radius: 12px; font-size: 14px; font-weight: 700;
+            cursor: pointer; transition: all .2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-sair:hover { background: var(--danger); color: #fff; box-shadow: 0 6px 20px rgba(248,113,113,.3); }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-brand">
+        <div class="logo">🏢</div>
+        <span>Controle de Visitantes</span>
+    </div>
+    <div class="nav-right">
+        <span class="badge-usuario">Olá, <strong th:text="${usuarioLogado}">usuário</strong></span>
+        <button class="btn-icon" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+    </div>
+</nav>
+
+<main>
+    <div class="saudacao">
+        <h1>Menu Principal</h1>
+        <p>Selecione um módulo para continuar</p>
+    </div>
+
+    <div class="grid">
+        <a th:href="@{/usuarios}" class="modulo">
+            <div class="icone-bg">👤</div>
+            <div>
+                <div class="modulo-label">Usuários</div>
+                <div class="modulo-desc">Gerenciar acessos</div>
+            </div>
+        </a>
+
+        <a th:href="@{/visitantes}" class="modulo">
+            <div class="icone-bg">🧑‍🤝‍🧑</div>
+            <div>
+                <div class="modulo-label">Visitantes</div>
+                <div class="modulo-desc">Gerenciar visitas</div>
+            </div>
+        </a>
+
+        <a th:href="@{/departamentos}" class="modulo">
+            <div class="icone-bg">🏢</div>
+            <div>
+                <div class="modulo-label">Departamentos</div>
+                <div class="modulo-desc">Gerenciar setores</div>
+            </div>
+        </a>
+
+        <a th:href="@{/visitas}" class="modulo">
+            <div class="icone-bg">📋</div>
+            <div>
+                <div class="modulo-label">Visitas</div>
+                <div class="modulo-desc">Entradas e saídas</div>
+            </div>
+        </a>
+
+        <a th:href="@{/agendamentos}" class="modulo" style="grid-column: span 2;">
+            <div class="icone-bg">📅</div>
+            <div>
+                <div class="modulo-label">Agendamentos</div>
+                <div class="modulo-desc">Agendar e confirmar visitas</div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Opção 5 — Sair → volta ao Login -->
+    <div class="sair-wrap">
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="btn-sair">🚪 Sair do sistema</button>
+        </form>
+    </div>
+</main>
+
+<script>
+    const saved = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.querySelector('.btn-icon').textContent = saved === 'dark' ? '🌙' : '☀️';
+
+    function toggleTheme() {
+        const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('theme', t);
+        document.querySelector('.btn-icon').textContent = t === 'dark' ? '🌙' : '☀️';
+    }
+</script>
+</body>
+</html>
