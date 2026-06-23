@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Controle de Visitantes</title>
+    <style>
+        :root {
+            --bg:         #0F172A;
+            --surface:    #1E293B;
+            --border:     #334155;
+            --text:       #F1F5F9;
+            --text-muted: #94A3B8;
+            --accent:     #3B82F6;
+            --accent-hov: #2563EB;
+            --danger:     #F87171;
+            --success:    #4ADE80;
+            --input-bg:   #0F172A;
+            --shadow:     rgba(0,0,0,0.4);
+        }
+        [data-theme="light"] {
+            --bg:         #F1F5F9;
+            --surface:    #FFFFFF;
+            --border:     #CBD5E1;
+            --text:       #0F172A;
+            --text-muted: #64748B;
+            --input-bg:   #F8FAFC;
+            --shadow:     rgba(0,0,0,0.1);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .25s ease;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 20%, rgba(59,130,246,.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 80% 80%, rgba(99,102,241,.06) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .theme-toggle {
+            position: fixed; top: 20px; right: 20px;
+            background: var(--surface); border: 1px solid var(--border);
+            color: var(--text-muted); padding: 8px 13px;
+            border-radius: 50px; cursor: pointer; font-size: 18px;
+            transition: all .25s; z-index: 10; line-height: 1;
+        }
+        .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 44px 40px;
+            width: 100%; max-width: 420px;
+            box-shadow: 0 20px 60px var(--shadow);
+            animation: fadeUp .4s ease both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            width: 54px; height: 54px;
+            background: linear-gradient(135deg, #3B82F6, #6366F1);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; margin: 0 auto 20px;
+            box-shadow: 0 8px 24px rgba(59,130,246,.3);
+        }
+
+        h1 { color: var(--text); font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+        .subtitulo { color: var(--text-muted); font-size: 13px; text-align: center; margin-bottom: 28px; }
+
+        .campo { margin-bottom: 18px; }
+
+        label {
+            display: block; color: var(--text-muted);
+            font-size: 11px; font-weight: 700;
+            letter-spacing: .06em; text-transform: uppercase; margin-bottom: 7px;
+        }
+
+        .input-wrap { position: relative; }
+        .input-wrap .icon {
+            position: absolute; left: 13px; top: 50%;
+            transform: translateY(-50%); font-size: 15px; pointer-events: none;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%; padding: 11px 14px 11px 40px;
+            background: var(--input-bg); border: 1.5px solid var(--border);
+            border-radius: 9px; color: var(--text); font-size: 14px; outline: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+        }
+        input::placeholder { color: var(--text-muted); opacity: .6; }
+
+        .alerta {
+            display: flex; align-items: center; gap: 8px;
+            padding: 11px 14px; border-radius: 9px;
+            font-size: 13px; margin-bottom: 18px;
+        }
+        .alerta-erro    { background: rgba(248,113,113,.1); color: var(--danger);  border: 1px solid rgba(248,113,113,.3); }
+        .alerta-sucesso { background: rgba(74,222,128,.1);  color: var(--success); border: 1px solid rgba(74,222,128,.3); }
+
+        .btn {
+            width: 100%; padding: 13px;
+            background: var(--accent); color: #fff; border: none;
+            border-radius: 9px; font-size: 15px; font-weight: 700;
+            cursor: pointer; margin-top: 6px; letter-spacing: .02em;
+            transition: background .2s, transform .15s, box-shadow .2s;
+        }
+        .btn:hover  { background: var(--accent-hov); box-shadow: 0 6px 20px rgba(59,130,246,.35); transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+
+        .footer { text-align: center; margin-top: 24px; color: var(--text-muted); font-size: 12px; }
+
+        /* ── Tentativas ── */
+        .tentativas {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            margin-bottom: 16px;
+        }
+        .dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--border); transition: background .2s;
+        }
+        .dot.usado  { background: var(--danger); }
+        .dot.ultimo { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+
+        /* ── CAPTCHA ── */
+        .captcha-box {
+            background: rgba(59,130,246,.07);
+            border: 1.5px solid rgba(59,130,246,.25);
+            border-radius: 10px; padding: 16px 18px;
+            margin-bottom: 18px; text-align: center;
+            animation: fadeUp .3s ease;
+        }
+        .captcha-box .captcha-label {
+            font-size: 11px; font-weight: 700; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px;
+        }
+        .captcha-box .captcha-question {
+            font-size: 26px; font-weight: 800; color: var(--accent);
+            letter-spacing: .05em; margin-bottom: 12px;
+        }
+        .captcha-box input[type="number"] {
+            width: 100px; padding: 10px; text-align: center;
+            background: var(--input-bg); border: 1.5px solid var(--border);
+            border-radius: 8px; color: var(--text); font-size: 20px; font-weight: 700;
+            outline: none; transition: border-color .2s, box-shadow .2s;
+            -moz-appearance: textfield;
+        }
+        .captcha-box input[type="number"]::-webkit-inner-spin-button,
+        .captcha-box input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+        .captcha-box input[type="number"]:focus {
+            border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+        }
+        .captcha-box .captcha-hint {
+            font-size: 11px; color: var(--text-muted); margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+
+<div class="card">
+    <div class="logo">🏢</div>
+    <h1>Controle de Visitantes</h1>
+    <p class="subtitulo">Acesse sua conta para continuar</p>
+
+    <div th:if="${mensagemErro}" class="alerta alerta-erro">
+        ⚠️ <span th:text="${mensagemErro}"></span>
+    </div>
+    <div th:if="${mensagemSucesso}" class="alerta alerta-sucesso">
+        ✅ <span th:text="${mensagemSucesso}"></span>
+    </div>
+
+    <!-- Indicador de tentativas (aparece após a 1ª falha) -->
+    <div class="tentativas" th:if="${tentativas > 0}">
+        <span class="dot" th:classappend="${tentativas >= 1} ? 'usado' : ''"></span>
+        <span class="dot" th:classappend="${tentativas >= 2} ? 'usado' : ''"></span>
+        <span class="dot" th:classappend="${tentativas >= 3} ? 'ultimo' : ''"></span>
+    </div>
+
+    <form th:action="@{/login}" method="post">
+        <div class="campo">
+            <label for="username">Usuário</label>
+            <div class="input-wrap">
+                <span class="icon">👤</span>
+                <input type="text" id="username" name="username" placeholder="Digite seu usuário" required autofocus>
+            </div>
+        </div>
+        <div class="campo">
+            <label for="password">Senha</label>
+            <div class="input-wrap">
+                <span class="icon">🔒</span>
+                <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
+            </div>
+        </div>
+
+        <!-- CAPTCHA — exibido após 3 tentativas falhas -->
+        <div class="captcha-box" th:if="${captchaRequired}">
+            <div class="captcha-label">🔐 Verificação de segurança</div>
+            <div class="captcha-question">
+                <span th:text="${captchaQuestion}"></span> = ?
+            </div>
+            <input type="number" name="captchaAnswer" placeholder="?" required autofocus
+                   inputmode="numeric" min="1" max="18">
+            <div class="captcha-hint">Resolva a operação matemática para continuar</div>
+        </div>
+
+        <button type="submit" class="btn">Entrar →</button>
+    </form>
+
+    <p class="footer">Sistema Acadêmico · Jovem Programador</p>
+</div>
+
+<script>
+    const saved = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.querySelector('.theme-toggle').textContent = saved === 'dark' ? '🌙' : '☀️';
+
+    function toggleTheme() {
+        const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('theme', t);
+        document.querySelector('.theme-toggle').textContent = t === 'dark' ? '🌙' : '☀️';
+    }
+</script>
+</body>
+</html>
