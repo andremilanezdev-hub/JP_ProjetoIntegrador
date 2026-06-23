@@ -222,6 +222,13 @@
         }
         .modal-item .info .nome { font-size: 14px; font-weight: 600; }
         .modal-item .info .empresa { font-size: 12px; color: var(--text-muted); }
+        .modal-item.em-visita { opacity: .5; cursor: not-allowed; pointer-events: none; }
+        .badge-em-visita {
+            margin-left: auto; padding: 2px 8px; border-radius: 50px;
+            font-size: 10px; font-weight: 700; white-space: nowrap;
+            background: rgba(251,191,36,.15); color: var(--warning);
+            border: 1px solid rgba(251,191,36,.3);
+        }
 
         .modal-footer {
             display: flex; justify-content: flex-end; gap: 10px;
@@ -502,17 +509,19 @@
             return;
         }
         lista.forEach(v => {
+            const emVisita = v.em_visita == 1 || v.em_visita === true;
             const sel = !!tempSelecionados[v.id];
             const item = document.createElement('div');
-            item.className = 'modal-item' + (sel ? ' selecionado' : '');
+            item.className = 'modal-item' + (sel ? ' selecionado' : '') + (emVisita ? ' em-visita' : '');
             item.dataset.id = v.id;
             item.innerHTML = `
                 <div class="check">${sel ? '✓' : ''}</div>
                 <div class="info">
                     <div class="nome">${v.nome}</div>
                     <div class="empresa">${v.empresa || ''}</div>
-                </div>`;
-            item.addEventListener('click', () => toggleItem(v, item));
+                </div>
+                ${emVisita ? '<span class="badge-em-visita">⏳ Em visita</span>' : ''}`;
+            if (!emVisita) item.addEventListener('click', () => toggleItem(v, item));
             container.appendChild(item);
         });
     }
