@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visitas — Controle de Visitantes</title>
+    <style>
+        :root {
+            --bg:         #0F172A;
+            --surface:    #1E293B;
+            --surface2:   #273549;
+            --border:     #334155;
+            --text:       #F1F5F9;
+            --text-muted: #94A3B8;
+            --accent:     #3B82F6;
+            --accent-hov: #2563EB;
+            --danger:     #F87171;
+            --success:    #4ADE80;
+            --warning:    #FBBF24;
+            --input-bg:   #0F172A;
+            --shadow:     rgba(0,0,0,0.35);
+            --row-hover:  rgba(59,130,246,.06);
+        }
+        [data-theme="light"] {
+            --bg:         #F1F5F9;
+            --surface:    #FFFFFF;
+            --surface2:   #E2E8F0;
+            --border:     #CBD5E1;
+            --text:       #0F172A;
+            --text-muted: #64748B;
+            --input-bg:   #F8FAFC;
+            --shadow:     rgba(0,0,0,0.08);
+            --row-hover:  rgba(59,130,246,.05);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; transition: background .25s, color .25s;
+        }
+
+        nav {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 0 32px; height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 1px 12px var(--shadow);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .nav-brand { display: flex; align-items: center; gap: 10px; }
+        .nav-logo {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, #3B82F6, #6366F1);
+            border-radius: 9px; display: flex; align-items: center;
+            justify-content: center; font-size: 18px;
+        }
+        .nav-brand span { font-size: 15px; font-weight: 700; }
+        .nav-right { display: flex; align-items: center; gap: 10px; }
+        .btn-nav {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text-muted); padding: 7px 14px;
+            border-radius: 9px; font-size: 13px; font-weight: 600;
+            text-decoration: none; transition: all .2s;
+        }
+        .btn-nav:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-icon {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text-muted); padding: 7px 11px;
+            border-radius: 9px; cursor: pointer; font-size: 16px;
+            transition: all .2s; line-height: 1;
+        }
+        .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+
+        main { max-width: 1100px; margin: 0 auto; padding: 40px 24px 60px; }
+
+        .page-header { margin-bottom: 28px; }
+        .page-header h1 { font-size: 22px; font-weight: 700; }
+        .page-header p  { color: var(--text-muted); font-size: 13px; margin-top: 3px; }
+
+        .alerta {
+            display: flex; align-items: center; gap: 8px;
+            padding: 12px 16px; border-radius: 10px;
+            font-size: 13px; margin-bottom: 20px; animation: fadeUp .3s ease;
+        }
+        .alerta-erro    { background: rgba(248,113,113,.1); color: var(--danger);  border: 1px solid rgba(248,113,113,.25); }
+        .alerta-sucesso { background: rgba(74,222,128,.1);  color: var(--success); border: 1px solid rgba(74,222,128,.25); }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 28px;
+            margin-bottom: 24px; box-shadow: 0 2px 12px var(--shadow);
+        }
+        .card-title {
+            font-size: 12px; font-weight: 700; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: .06em; margin-bottom: 20px;
+        }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-full  { grid-column: span 2; }
+
+        .form-group label {
+            display: block; font-size: 11px; font-weight: 700;
+            color: var(--text-muted); letter-spacing: .05em;
+            text-transform: uppercase; margin-bottom: 6px;
+        }
+        select, input[type="text"], textarea {
+            width: 100%; padding: 10px 13px;
+            background: var(--input-bg); border: 1.5px solid var(--border);
+            border-radius: 8px; color: var(--text); font-size: 14px; outline: none;
+            transition: border-color .2s, box-shadow .2s; font-family: inherit;
+        }
+        select:focus, input:focus, textarea:focus {
+            border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+        }
+        textarea { resize: vertical; min-height: 70px; }
+
+        /* ── Campo visitantes com botão abre modal ── */
+        .visitantes-field {
+            display: flex; gap: 8px; align-items: stretch;
+        }
+        .visitantes-display {
+            flex: 1; padding: 10px 13px;
+            background: var(--input-bg); border: 1.5px solid var(--border);
+            border-radius: 8px; color: var(--text); font-size: 13px;
+            min-height: 42px; cursor: default;
+            display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+        }
+        .visitantes-display.vazio { color: var(--text-muted); font-style: italic; }
+        .tag {
+            background: var(--accent); color: #fff;
+            padding: 3px 10px; border-radius: 50px;
+            font-size: 12px; font-weight: 600;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .tag button {
+            background: none; border: none; color: #fff;
+            cursor: pointer; font-size: 14px; padding: 0; line-height: 1;
+        }
+        .btn-abrir-modal {
+            padding: 10px 16px; background: var(--surface2);
+            border: 1.5px solid var(--border); border-radius: 8px;
+            color: var(--text); font-size: 13px; font-weight: 600;
+            cursor: pointer; white-space: nowrap; transition: all .2s;
+        }
+        .btn-abrir-modal:hover { border-color: var(--accent); color: var(--accent); }
+
+        .btn-primary {
+            padding: 12px 24px; background: var(--accent); color: #fff;
+            border: none; border-radius: 8px; font-size: 14px; font-weight: 700;
+            cursor: pointer; transition: background .2s, transform .15s, box-shadow .2s; margin-top: 4px;
+        }
+        .btn-primary:hover { background: var(--accent-hov); box-shadow: 0 4px 14px rgba(59,130,246,.35); transform: translateY(-1px); }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity .2s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+        .modal {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 16px; padding: 28px;
+            width: 100%; max-width: 520px; max-height: 80vh;
+            display: flex; flex-direction: column; gap: 16px;
+            box-shadow: 0 24px 60px rgba(0,0,0,.5);
+            transform: translateY(16px); transition: transform .2s;
+        }
+        .modal-overlay.open .modal { transform: translateY(0); }
+
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h2 { font-size: 16px; font-weight: 700; }
+        .modal-close {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text-muted); width: 32px; height: 32px;
+            border-radius: 8px; cursor: pointer; font-size: 18px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .2s;
+        }
+        .modal-close:hover { border-color: var(--danger); color: var(--danger); }
+
+        .modal-search input {
+            width: 100%; padding: 10px 13px;
+            background: var(--input-bg); border: 1.5px solid var(--border);
+            border-radius: 8px; color: var(--text); font-size: 14px; outline: none;
+            transition: border-color .2s;
+        }
+        .modal-search input:focus { border-color: var(--accent); }
+
+        .modal-lista {
+            overflow-y: auto; flex: 1;
+            display: flex; flex-direction: column; gap: 6px;
+        }
+        .modal-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 14px; border-radius: 9px;
+            border: 1.5px solid var(--border);
+            cursor: pointer; transition: all .2s;
+            background: var(--input-bg);
+        }
+        .modal-item:hover { border-color: var(--accent); background: var(--surface2); }
+        .modal-item.selecionado { border-color: var(--accent); background: rgba(59,130,246,.1); }
+
+        .modal-item .check {
+            width: 20px; height: 20px; border-radius: 6px;
+            border: 2px solid var(--border); flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .2s; font-size: 12px;
+        }
+        .modal-item.selecionado .check {
+            background: var(--accent); border-color: var(--accent); color: #fff;
+        }
+        .modal-item .info .nome { font-size: 14px; font-weight: 600; }
+        .modal-item .info .empresa { font-size: 12px; color: var(--text-muted); }
+        .modal-item.em-visita { opacity: .5; cursor: not-allowed; pointer-events: none; }
+        .badge-em-visita {
+            margin-left: auto; padding: 2px 8px; border-radius: 50px;
+            font-size: 10px; font-weight: 700; white-space: nowrap;
+            background: rgba(251,191,36,.15); color: var(--warning);
+            border: 1px solid rgba(251,191,36,.3);
+        }
+
+        .modal-footer {
+            display: flex; justify-content: flex-end; gap: 10px;
+            border-top: 1px solid var(--border); padding-top: 16px;
+        }
+        .btn-cancelar {
+            padding: 9px 18px; background: var(--surface2);
+            border: 1px solid var(--border); border-radius: 8px;
+            color: var(--text-muted); font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all .2s;
+        }
+        .btn-cancelar:hover { border-color: var(--danger); color: var(--danger); }
+        .btn-confirmar {
+            padding: 9px 18px; background: var(--accent); color: #fff;
+            border: none; border-radius: 8px;
+            font-size: 13px; font-weight: 700; cursor: pointer; transition: background .2s;
+        }
+        .btn-confirmar:hover { background: var(--accent-hov); }
+
+        /* ── Agendamentos do dia ── */
+        .hoje-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+        .hoje-card {
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 12px; padding: 18px; border-left: 4px solid var(--accent);
+        }
+        .hoje-card .hoje-hora    { font-size: 12px; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
+        .hoje-card .hoje-nome    { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+        .hoje-card .hoje-detalhe { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+        .hoje-card .hoje-motivo  { font-size: 12px; color: var(--text-muted); font-style: italic; margin-bottom: 14px; }
+        .btn-checkin {
+            width: 100%; padding: 9px; background: var(--accent); color: #fff;
+            border: none; border-radius: 7px; font-size: 13px; font-weight: 700;
+            cursor: pointer; transition: opacity .2s;
+        }
+        .btn-checkin:hover { opacity: .85; }
+
+        /* ── Em aberto ── */
+        .aberto-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+        .aberto-card {
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 12px; padding: 18px; border-left: 4px solid var(--warning);
+        }
+        .aberto-card .vis-nome    { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+        .aberto-card .vis-detalhe { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+        .aberto-card .vis-motivo  { font-size: 12px; color: var(--text-muted); font-style: italic; margin-bottom: 14px; }
+        .btn-saida {
+            width: 100%; padding: 9px; background: var(--success); color: #0F172A;
+            border: none; border-radius: 7px; font-size: 13px; font-weight: 700;
+            cursor: pointer; transition: opacity .2s;
+        }
+        .btn-saida:hover { opacity: .85; }
+
+        /* ── Tabela ── */
+        .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: var(--surface2); }
+        th {
+            padding: 12px 14px; text-align: left;
+            font-size: 11px; font-weight: 700; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: .06em;
+            border-bottom: 1px solid var(--border); white-space: nowrap;
+        }
+        td { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tbody tr { transition: background .15s; }
+        tbody tr:hover td { background: var(--row-hover); }
+
+        .badge-id { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); padding: 2px 8px; border-radius: 50px; font-size: 11px; font-weight: 600; }
+        .badge-aberto { background: rgba(251,191,36,.15); color: var(--warning); border: 1px solid rgba(251,191,36,.3); padding: 3px 10px; border-radius: 50px; font-size: 11px; font-weight: 700; }
+        .badge-encerrado { background: rgba(74,222,128,.1); color: var(--success); border: 1px solid rgba(74,222,128,.25); padding: 3px 10px; border-radius: 50px; font-size: 11px; font-weight: 700; }
+
+        .btn-sm { padding: 6px 11px; border-radius: 7px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; border: none; transition: all .2s; }
+        .btn-excluir { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+        .btn-excluir:hover { background: var(--danger); color: #fff; }
+
+        .vazio { text-align: center; color: var(--text-muted); padding: 40px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<!-- ── Modal de seleção de Visitantes ── -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>🧑‍🤝‍🧑 Selecionar Visitantes</h2>
+            <button class="modal-close" onclick="fecharModal()">✕</button>
+        </div>
+        <div class="modal-search">
+            <input type="text" id="modalBusca" placeholder="Buscar por nome ou empresa..." oninput="filtrarModal(this.value)">
+        </div>
+        <div class="modal-lista" id="modalLista">
+            <!-- Preenchido via JS com os dados do Thymeleaf -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+            <button class="btn-confirmar" onclick="confirmarSelecao()">Confirmar seleção</button>
+        </div>
+    </div>
+</div>
+
+<nav>
+    <div class="nav-brand">
+        <div class="nav-logo">🏢</div>
+        <span>Controle de Visitantes</span>
+    </div>
+    <div class="nav-right">
+        <a th:href="@{/menu}" class="btn-nav">← Menu</a>
+        <button class="btn-icon" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+    </div>
+</nav>
+
+<main>
+    <div class="page-header">
+        <h1>📋 Visitas</h1>
+        <p>Registre entradas, saídas e consulte o histórico de visitas</p>
+    </div>
+
+    <div th:if="${sucesso}" class="alerta alerta-sucesso">✅ <span th:text="${sucesso}"></span></div>
+    <div th:if="${erro}"    class="alerta alerta-erro">⚠️ <span th:text="${erro}"></span></div>
+
+    <!-- Agendamentos do dia -->
+    <div class="card" th:if="${not #lists.isEmpty(agendamentosHoje)}">
+        <div class="card-title">📅 Agendamentos de Hoje — Aguardando Check-in</div>
+        <div class="hoje-grid">
+            <div th:each="a : ${agendamentosHoje}" class="hoje-card">
+                <div class="hoje-hora" th:text="${#temporals.format(a.data_agendamento, 'HH:mm')}"></div>
+                <div class="hoje-nome" th:text="${a.visitantes} ?: 'Visitante não vinculado'"></div>
+                <div class="hoje-detalhe">🏢 <span th:text="${a.departamento}"></span></div>
+                <div class="hoje-motivo" th:text="${a.motivo}"></div>
+                <form th:action="@{/visitas/checkin/{id}(id=${a.id})}" method="post">
+                    <button type="submit" class="btn-checkin">✅ Check-in</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registrar Entrada -->
+    <div class="card">
+        <div class="card-title">🚪 Registrar Entrada</div>
+        <form th:action="@{/visitas/entrada}" method="post" id="formEntrada">
+
+            <!-- Hidden inputs dinâmicos para os IDs selecionados -->
+            <div id="hiddenInputs"></div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Departamento</label>
+                    <select name="departamentoId" required>
+                        <option value="" disabled selected>Selecione...</option>
+                        <option th:each="d : ${departamentos}"
+                                th:value="${d.id}"
+                                th:text="${d.nome}"></option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Visitantes</label>
+                    <div class="visitantes-field">
+                        <div class="visitantes-display vazio" id="visitantesDisplay">
+                            Nenhum visitante selecionado
+                        </div>
+                        <button type="button" class="btn-abrir-modal" onclick="abrirModal()">
+                            + Selecionar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group form-full">
+                    <label>Motivo da visita</label>
+                    <textarea name="motivo" placeholder="Descreva o motivo da visita..." required></textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary" onclick="return validarVisitantes()">✅ Registrar Entrada</button>
+        </form>
+    </div>
+
+    <!-- Visitas em Aberto -->
+    <div class="card" th:if="${not #lists.isEmpty(emAberto)}">
+        <div class="card-title">⏳ Visitas em Andamento</div>
+        <div class="aberto-grid">
+            <div th:each="v : ${emAberto}" class="aberto-card">
+                <div class="vis-nome"    th:text="${v.visitantes} ?: 'Visitante não vinculado'"></div>
+                <div class="vis-detalhe">🏢 <span th:text="${v.departamento}"></span></div>
+                <div class="vis-detalhe">🕐 Entrada: <span th:text="${#temporals.format(v.data_entrada, 'dd/MM/yyyy HH:mm')}"></span></div>
+                <div class="vis-motivo"  th:text="${v.motivo}"></div>
+                <form th:action="@{/visitas/saida/{id}(id=${v.id})}" method="post">
+                    <button type="submit" class="btn-saida">🚪 Registrar Saída</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico -->
+    <div class="card">
+        <div class="card-title">📜 Histórico de Visitas</div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th><th>Visitante(s)</th><th>Departamento</th>
+                        <th>Motivo</th><th>Entrada</th><th>Saída</th><th>Status</th><th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="v : ${visitas}">
+                        <td><span class="badge-id" th:text="${v.id}"></span></td>
+                        <td th:text="${v.visitantes} ?: '—'"></td>
+                        <td th:text="${v.departamento}"></td>
+                        <td th:text="${v.motivo}"></td>
+                        <td th:text="${#temporals.format(v.data_entrada, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td th:text="${v.data_saida != null ? #temporals.format(v.data_saida, 'dd/MM/yyyy HH:mm') : '—'}"></td>
+                        <td>
+                            <span th:if="${v.data_saida == null}"  class="badge-aberto">Em aberto</span>
+                            <span th:if="${v.data_saida != null}" class="badge-encerrado">Encerrada</span>
+                        </td>
+                        <td>
+                            <form th:action="@{/visitas/deletar/{id}(id=${v.id})}" method="post"
+                                  onsubmit="return confirm('Excluir esta visita?')">
+                                <button type="submit" class="btn-sm btn-excluir">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(visitas)}">
+                        <td colspan="8" class="vazio">Nenhuma visita registrada.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- Dados dos visitantes injetados pelo Thymeleaf para o JS -->
+<script th:inline="javascript">
+    const todosVisitantes = /*[[${visitantes}]]*/ [];
+</script>
+
+<script>
+    // ── Tema ──────────────────────────────────────────────────────
+    const saved = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.querySelector('.btn-icon').textContent = saved === 'dark' ? '🌙' : '☀️';
+
+    function toggleTheme() {
+        const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('theme', t);
+        document.querySelector('.btn-icon').textContent = t === 'dark' ? '🌙' : '☀️';
+    }
+
+    // ── Estado da seleção ─────────────────────────────────────────
+    let selecionados = {}; // { id: { id, nome, empresa } }
+    let tempSelecionados = {};
+
+    // ── Abrir modal ───────────────────────────────────────────────
+    function abrirModal() {
+        tempSelecionados = { ...selecionados };
+        renderizarLista(todosVisitantes);
+        document.getElementById('modalBusca').value = '';
+        document.getElementById('modalOverlay').classList.add('open');
+        document.getElementById('modalBusca').focus();
+    }
+
+    function fecharModal() {
+        document.getElementById('modalOverlay').classList.remove('open');
+    }
+
+    // Fechar ao clicar fora
+    document.getElementById('modalOverlay').addEventListener('click', function(e) {
+        if (e.target === this) fecharModal();
+    });
+
+    // ── Renderizar itens da lista ─────────────────────────────────
+    function renderizarLista(lista) {
+        const container = document.getElementById('modalLista');
+        container.innerHTML = '';
+        if (lista.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:24px">Nenhum visitante encontrado</p>';
+            return;
+        }
+        lista.forEach(v => {
+            const emVisita = v.em_visita == 1 || v.em_visita === true;
+            const sel = !!tempSelecionados[v.id];
+            const item = document.createElement('div');
+            item.className = 'modal-item' + (sel ? ' selecionado' : '') + (emVisita ? ' em-visita' : '');
+            item.dataset.id = v.id;
+            item.innerHTML = `
+                <div class="check">${sel ? '✓' : ''}</div>
+                <div class="info">
+                    <div class="nome">${v.nome}</div>
+                    <div class="empresa">${v.empresa || ''}</div>
+                </div>
+                ${emVisita ? '<span class="badge-em-visita">⏳ Em visita</span>' : ''}`;
+            if (!emVisita) item.addEventListener('click', () => toggleItem(v, item));
+            container.appendChild(item);
+        });
+    }
+
+    function toggleItem(v, el) {
+        if (tempSelecionados[v.id]) {
+            delete tempSelecionados[v.id];
+            el.classList.remove('selecionado');
+            el.querySelector('.check').textContent = '';
+        } else {
+            tempSelecionados[v.id] = v;
+            el.classList.add('selecionado');
+            el.querySelector('.check').textContent = '✓';
+        }
+    }
+
+    // ── Filtrar ───────────────────────────────────────────────────
+    function filtrarModal(termo) {
+        const filtrado = todosVisitantes.filter(v =>
+            v.nome.toLowerCase().includes(termo.toLowerCase()) ||
+            (v.empresa || '').toLowerCase().includes(termo.toLowerCase())
+        );
+        renderizarLista(filtrado);
+    }
+
+    // ── Confirmar seleção ─────────────────────────────────────────
+    function confirmarSelecao() {
+        selecionados = { ...tempSelecionados };
+        atualizarDisplay();
+        atualizarHiddenInputs();
+        fecharModal();
+    }
+
+    function atualizarDisplay() {
+        const display = document.getElementById('visitantesDisplay');
+        const ids = Object.keys(selecionados);
+        if (ids.length === 0) {
+            display.innerHTML = 'Nenhum visitante selecionado';
+            display.classList.add('vazio');
+            return;
+        }
+        display.classList.remove('vazio');
+        display.innerHTML = ids.map(id => {
+            const v = selecionados[id];
+            return `<span class="tag">${v.nome} <button type="button" onclick="removerTag(${id})">×</button></span>`;
+        }).join('');
+    }
+
+    function removerTag(id) {
+        delete selecionados[id];
+        atualizarDisplay();
+        atualizarHiddenInputs();
+    }
+
+    function atualizarHiddenInputs() {
+        const container = document.getElementById('hiddenInputs');
+        container.innerHTML = Object.keys(selecionados)
+            .map(id => `<input type="hidden" name="visitantesIds" value="${id}">`)
+            .join('');
+    }
+
+    function validarVisitantes() {
+        if (Object.keys(selecionados).length === 0) {
+            alert('Selecione pelo menos um visitante.');
+            return false;
+        }
+        return true;
+    }
+</script>
+</body>
+</html>

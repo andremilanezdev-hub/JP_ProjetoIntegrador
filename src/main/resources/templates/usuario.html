@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuários — Controle de Visitantes</title>
+    <style>
+        :root {
+            --bg:         #0F172A;
+            --surface:    #1E293B;
+            --surface2:   #273549;
+            --border:     #334155;
+            --text:       #F1F5F9;
+            --text-muted: #94A3B8;
+            --accent:     #3B82F6;
+            --accent-hov: #2563EB;
+            --danger:     #F87171;
+            --success:    #4ADE80;
+            --input-bg:   #0F172A;
+            --shadow:     rgba(0,0,0,0.35);
+            --row-hover:  rgba(59,130,246,.06);
+        }
+        [data-theme="light"] {
+            --bg:         #F1F5F9;
+            --surface:    #FFFFFF;
+            --surface2:   #E2E8F0;
+            --border:     #CBD5E1;
+            --text:       #0F172A;
+            --text-muted: #64748B;
+            --input-bg:   #F8FAFC;
+            --shadow:     rgba(0,0,0,0.08);
+            --row-hover:  rgba(59,130,246,.05);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; transition: background .25s, color .25s;
+        }
+
+        /* ── Navbar ── */
+        nav {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 0 32px; height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 1px 12px var(--shadow);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .nav-brand { display: flex; align-items: center; gap: 10px; }
+        .nav-logo {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, #3B82F6, #6366F1);
+            border-radius: 9px; display: flex; align-items: center;
+            justify-content: center; font-size: 18px;
+        }
+        .nav-brand span { font-size: 15px; font-weight: 700; }
+
+        .nav-right { display: flex; align-items: center; gap: 10px; }
+
+        .btn-nav {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text-muted); padding: 7px 14px;
+            border-radius: 9px; cursor: pointer; font-size: 13px; font-weight: 600;
+            text-decoration: none; transition: all .2s; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-nav:hover { border-color: var(--accent); color: var(--accent); }
+
+        .btn-icon {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text-muted); padding: 7px 11px;
+            border-radius: 9px; cursor: pointer; font-size: 16px;
+            transition: all .2s; line-height: 1;
+        }
+        .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ── Layout ── */
+        main { max-width: 900px; margin: 0 auto; padding: 40px 24px 60px; }
+
+        .page-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 28px;
+        }
+        .page-header h1 { font-size: 22px; font-weight: 700; }
+        .page-header p  { color: var(--text-muted); font-size: 13px; margin-top: 3px; }
+
+        /* ── Alertas ── */
+        .alerta {
+            display: flex; align-items: center; gap: 8px;
+            padding: 12px 16px; border-radius: 10px;
+            font-size: 13px; margin-bottom: 20px; animation: fadeUp .3s ease;
+        }
+        .alerta-erro    { background: rgba(248,113,113,.1); color: var(--danger);  border: 1px solid rgba(248,113,113,.25); }
+        .alerta-sucesso { background: rgba(74,222,128,.1);  color: var(--success); border: 1px solid rgba(74,222,128,.25); }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Card formulário ── */
+        .card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 28px;
+            margin-bottom: 24px; box-shadow: 0 2px 12px var(--shadow);
+        }
+        .card-title {
+            font-size: 14px; font-weight: 700; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: .06em; margin-bottom: 18px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+
+        .form-group { flex: 1; min-width: 150px; }
+        .form-group label {
+            display: block; font-size: 11px; font-weight: 700;
+            color: var(--text-muted); letter-spacing: .05em;
+            text-transform: uppercase; margin-bottom: 6px;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%; padding: 10px 13px;
+            background: var(--input-bg); border: 1.5px solid var(--border);
+            border-radius: 8px; color: var(--text); font-size: 14px; outline: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+        }
+        input::placeholder { color: var(--text-muted); opacity: .6; }
+
+        .btn-primary {
+            padding: 10px 20px; background: var(--accent); color: #fff;
+            border: none; border-radius: 8px; font-size: 14px; font-weight: 700;
+            cursor: pointer; white-space: nowrap;
+            transition: background .2s, transform .15s, box-shadow .2s;
+        }
+        .btn-primary:hover { background: var(--accent-hov); box-shadow: 0 4px 14px rgba(59,130,246,.35); transform: translateY(-1px); }
+
+        /* ── Tabela ── */
+        .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        thead { background: var(--surface2); }
+        th {
+            padding: 13px 16px; text-align: left;
+            font-size: 11px; font-weight: 700; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: .06em;
+            border-bottom: 1px solid var(--border);
+        }
+        td {
+            padding: 14px 16px; font-size: 14px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        tr:last-child td { border-bottom: none; }
+        tbody tr { transition: background .15s; }
+        tbody tr:hover td { background: var(--row-hover); }
+
+        .badge-id {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text-muted); padding: 2px 8px;
+            border-radius: 50px; font-size: 12px; font-weight: 600;
+        }
+
+        /* ── Ações inline ── */
+        .acoes { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+        .senha-group { display: flex; gap: 6px; align-items: center; }
+        input.senha-inline { width: 130px; padding: 7px 10px; font-size: 13px; }
+
+        .btn-sm {
+            padding: 7px 12px; border-radius: 7px;
+            font-size: 12px; font-weight: 700; cursor: pointer;
+            white-space: nowrap; border: none; transition: all .2s;
+        }
+        .btn-alterar { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+        .btn-alterar:hover { border-color: var(--accent); color: var(--accent); }
+
+        .btn-excluir { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+        .btn-excluir:hover { background: var(--danger); color: #fff; }
+
+        .vazio {
+            text-align: center; color: var(--text-muted);
+            padding: 40px; font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-brand">
+        <div class="nav-logo">🏢</div>
+        <span>Controle de Visitantes</span>
+    </div>
+    <div class="nav-right">
+        <a th:href="@{/menu}" class="btn-nav">← Menu</a>
+        <button class="btn-icon" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+    </div>
+</nav>
+
+<main>
+    <div class="page-header">
+        <div>
+            <h1>👤 Usuários</h1>
+            <p>Gerencie os usuários com acesso ao sistema</p>
+        </div>
+    </div>
+
+    <div th:if="${sucesso}" class="alerta alerta-sucesso">✅ <span th:text="${sucesso}"></span></div>
+    <div th:if="${erro}"    class="alerta alerta-erro">⚠️ <span th:text="${erro}"></span></div>
+
+    <!-- Cadastro -->
+    <div class="card">
+        <div class="card-title">➕ Novo Usuário</div>
+        <form th:action="@{/usuarios/cadastrar}" method="post">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nome completo</label>
+                    <input type="text" name="nome" placeholder="Ex: João da Silva" required>
+                </div>
+                <div class="form-group">
+                    <label>Login</label>
+                    <input type="text" name="login" placeholder="Ex: joao.silva" required>
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" name="senha" placeholder="••••••" required>
+                </div>
+                <button type="submit" class="btn-primary">Cadastrar</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Listagem -->
+    <div class="card">
+        <div class="card-title">📋 Usuários Cadastrados</div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Login</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${usuarios}">
+                        <td><span class="badge-id" th:text="${u.id}"></span></td>
+                        <td th:text="${u.nome}"></td>
+                        <td th:text="${u.login}"></td>
+                        <td>
+                            <div class="acoes">
+                                <form th:action="@{/usuarios/senha/{id}(id=${u.id})}" method="post">
+                                    <div class="senha-group">
+                                        <input type="password" name="novaSenha"
+                                               placeholder="Nova senha" class="senha-inline" required>
+                                        <button type="submit" class="btn-sm btn-alterar">Alterar Senha</button>
+                                    </div>
+                                </form>
+                                <form th:action="@{/usuarios/deletar/{id}(id=${u.id})}" method="post"
+                                      onsubmit="return confirm('Excluir este usuário?')">
+                                    <button type="submit" class="btn-sm btn-excluir">Excluir</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(usuarios)}">
+                        <td colspan="4" class="vazio">Nenhum usuário cadastrado.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script>
+    const saved = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.querySelector('.btn-icon').textContent = saved === 'dark' ? '🌙' : '☀️';
+
+    function toggleTheme() {
+        const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('theme', t);
+        document.querySelector('.btn-icon').textContent = t === 'dark' ? '🌙' : '☀️';
+    }
+</script>
+</body>
+</html>
