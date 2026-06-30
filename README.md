@@ -81,11 +81,6 @@ Aguarde o healthcheck do MySQL (~30s) antes de acessar a aplicação.
 http://localhost:4000/login
 ```
 
-| Campo | Valor |
-|-------|-------|
-| Usuário | `admin` |
-| Senha | `admin123` |
-
 ---
 
 ## 🔧 Execução local (sem Docker)
@@ -194,5 +189,5 @@ src/main/
 
 ## 👨‍💻 Autor
 
-**André Marcelo**  
+**André Milanez Douglas Estevam Leandro Paz**  
 Curso Jovem Programador — Projeto Integrador 2026
